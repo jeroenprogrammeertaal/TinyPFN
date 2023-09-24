@@ -8,22 +8,22 @@ from data.preprocess import prepare_inputs
 
 class TinyMLP:
 
-  def __init__(self, input_dim, hidden_dim, out_dim, dropout_p=0.5):
+  def __init__(self, input_dim: int, hidden_dim: int, out_dim: int, dropout_p: float=0.5):
     self.dropout_p = dropout_p
     self.l1 = Tensor.scaled_uniform(input_dim, hidden_dim)
     self.b1 = Tensor.zeros(hidden_dim)
     self.l2 = Tensor.scaled_uniform(hidden_dim, out_dim)
     self.b2 = Tensor.zeros(out_dim)
 
-  def forward(self, x: Tensor):
+  def forward(self, x: Tensor) -> Tensor:
     return x.matmul(self.l1).add(self.b1).gelu().dropout(self.dropout_p).matmul(self.l2).add(self.b2)
   
-  def get_parameters(self):
+  def get_parameters(self) -> list[Tensor]:
     return [self.l1, self.l2, self.b1, self.b2]
 
 class TransformerBlock:
 
-  def __init__(self, hidden_dim: int, head_dim: int, n_heads: int, ff_size: int, dropout_p):   
+  def __init__(self, hidden_dim: int, head_dim: int, n_heads: int, ff_size: int, dropout_p: float):   
     self.head_dim = head_dim
     self.n_heads = n_heads
     self.dropout_p = dropout_p
@@ -38,7 +38,7 @@ class TransformerBlock:
     self.ln2_bias = Tensor.zeros(hidden_dim)
     self.mlp = TinyMLP(hidden_dim, ff_size, hidden_dim, dropout_p=dropout_p)
 
-  def attn(self, x: Tensor, eval_pos):
+  def attn(self, x: Tensor, eval_pos: int) -> Tensor:
     # Shape: Batch (B) * Dataset/Sequence (S) * hidden_dim (D) x 3
     B, _, D = x.shape
     D = D // 3
@@ -66,7 +66,7 @@ class TransformerBlock:
     attn_right = attn(q_test, k_train, v_train)
     return attn_left.cat(attn_right, dim=1)
 
-  def forward(self, x: Tensor, n_training_examples: int):
+  def forward(self, x: Tensor, n_training_examples: int) -> Tensor:
     # x Shape: B * S * D
     # projected Shape: B * S * 3 x D
     # return shape -> B * S * D
@@ -82,7 +82,7 @@ class TransformerBlock:
     x = x + x2.dropout(self.dropout_p)
     return x.layernorm().mul(self.ln2_weight).add(self.ln2_bias)
 
-  def get_parameters(self):
+  def get_parameters(self) -> list[Tensor]:
     params = [self.projection, self.projection_b,self.o_projection, self.ln1_weight, self.ln1_bias, self.ln2_weight, self.ln2_bias]
     params.extend(self.mlp.get_parameters())
     return params
@@ -107,7 +107,7 @@ class TinyPFNTransformer:
       embedded = layer.forward(embedded, n_training_examples) 
     return self.decoder.forward(embedded)
   
-  def get_class_probs(self, outputs: Tensor, configs):
+  def get_class_probs(self, outputs: Tensor, configs: list) -> Tensor:
     agg_logits = Tensor.zeros_like(outputs[0])
     for i, config in enumerate(configs):
       (_, class_shift), _, _ = config
@@ -119,14 +119,14 @@ class TinyPFNTransformer:
     probs = agg_logits.softmax(-1)
     return probs
   
-  def get_parameters(self):
+  def get_parameters(self) -> list[Tensor]:
     params = [self.x_embedding, self.y_embedding]
     for layer in self.layers:
       params.extend(layer.get_parameters())
     params.extend(self.decoder.get_parameters())
     return params
   
-  def get_n_parameters(self):
+  def get_n_parameters(self) -> int:
     params = self.get_parameters()
     return sum([p.numel() for p in params])
 

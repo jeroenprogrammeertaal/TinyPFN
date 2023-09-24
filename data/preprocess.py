@@ -4,17 +4,17 @@ import numpy as np
 import numpy.ma as ma
 from sklearn.preprocessing import PowerTransformer
 
-def normalize(X):
+def normalize(X: np.ndarray) -> np.ndarray:
     mean, std = np.nanmean(X, axis=0), np.nanstd(X, axis=0) + 1e-5
     X = (X - mean) / std
     return np.clip(X, -100, 100)
 
-def normalize_by_used_features(X, n_used_features, n_features, sqrt):
+def normalize_by_used_features(X: np.ndarray, n_used_features: int, n_features: int, sqrt: bool=True) -> np.ndarray:
     if sqrt:
         return X / (n_used_features / n_features)**(0.5)
     return X / (n_used_features / n_features)
 
-def remove_outliers(X, n_sigma):
+def remove_outliers(X: np.ndarray, n_sigma: int) -> np.ndarray:
     mean, std = np.nanmean(X, axis=0), np.nanstd(X, axis=0)
     cutoff = std * n_sigma
     lower, upper = mean - cutoff, mean + cutoff
@@ -29,19 +29,19 @@ def remove_outliers(X, n_sigma):
     X = np.minimum(np.log(1 + np.abs(X)) + upper, X)
     return X
 
-def power_transform(X, pt):
+def power_transform(X: np.ndarray, pt: PowerTransformer) -> np.ndarray:
     for col in range(X.shape[-1]):
         pt.fit(X[:, col].reshape(-1, 1))
         X[:, col] = pt.transform(X[:, col].reshape(-1, 1)).reshape(-1)
     return X
 
-def pad_inputs(x, max_feats=100):
+def pad_inputs(x: np.ndarray, max_feats: int=100) -> np.ndarray:
     n_feats = x.shape[-1]
     padding = np.zeros((x.shape[0], max_feats - n_feats))
     return np.concatenate([x, padding], axis=-1)
 
 
-def generate_configs(n_feats, n_classes):
+def generate_configs(n_feats: int, n_classes: int) -> list:
     np.random.seed(42)
 
     feat_shift_configs = np.random.permutation(n_feats)
@@ -57,7 +57,7 @@ def generate_configs(n_feats, n_classes):
     configs = list(itertools.product(configs, preprocess_configs, style_configs))
     return configs
 
-def prepare_inputs(x, y, n_ensemble_configs):
+def prepare_inputs(x: np.ndarray, y: np.ndarray, n_ensemble_configs: int):
     n_feats = x.shape[-1]
     n_classes = len(np.unique(y))
     configs = generate_configs(n_feats, n_classes)[:n_ensemble_configs]
@@ -80,8 +80,7 @@ def prepare_inputs(x, y, n_ensemble_configs):
     batch_y = np.stack(y_inputs, axis=0)
     return batch_x, batch_y, configs
 
-
-def preprocess_input(x, transform):
+def preprocess_input(x: np.ndarray, transform: str) -> np.ndarray:
 
     x = normalize(x)
     if transform == 'power_all':
@@ -89,6 +88,7 @@ def preprocess_input(x, transform):
         x = power_transform(x, pt)
     x = remove_outliers(x, 4)
     x = normalize_by_used_features(x, x.shape[-1], 100, True)
+    x = np.nan_to_num(x, nan=0.0)
     return x
 
 
