@@ -6,6 +6,9 @@ __pycache__/
 # Model checkpoints
 *.cpkt
 
+# datasets
+data/openml_datasets/
+
 # C extensions
 *.so
 

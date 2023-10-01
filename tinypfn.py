@@ -5,6 +5,7 @@ import numpy as np
 from tinygrad.tensor import Tensor
 
 from data.preprocess import prepare_inputs
+import torch
 
 class TinyMLP:
 
@@ -107,13 +108,16 @@ class TinyPFNTransformer:
       embedded = layer.forward(embedded, n_training_examples) 
     return self.decoder.forward(embedded)
   
-  def get_class_probs(self, outputs: Tensor, configs: list) -> Tensor:
+  def get_class_probs(self, outputs: Tensor, configs: list, n_classes: int) -> Tensor:
+    outputs = outputs[:, :, :n_classes]
     agg_logits = Tensor.zeros_like(outputs[0])
     for i, config in enumerate(configs):
       (_, class_shift), _, _ = config
       output_ = outputs[i, :]
       if class_shift > 0:
         agg_logits += output_[..., class_shift:].cat(output_[..., :class_shift], dim=-1)
+      else:
+        agg_logits += output_
       
     agg_logits /= len(configs)
     probs = agg_logits.softmax(-1)
