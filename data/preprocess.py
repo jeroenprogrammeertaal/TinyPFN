@@ -4,7 +4,6 @@ import numpy as np
 import numpy.ma as ma
 import torch
 from sklearn.preprocessing import PowerTransformer
-from data.preprocess_paper import preprocess_input as paper_preprocess
 
 def normalize(X: np.ndarray, train_idx) -> np.ndarray:
     mean, std = np.nanmean(X[:train_idx], axis=0), np.nanstd(X[:train_idx], axis=0) + 1e-5
@@ -70,7 +69,6 @@ def prepare_inputs(x: np.ndarray, y: np.ndarray, n_ensemble_configs: int, train_
         (feat_config, class_config), prep_config, style_config = config
         # preprocess input
         prepped = preprocess_input(x, prep_config, train_idx)
-        #paper_prepped = paper_preprocess(torch.from_numpy(x[:, None, :]), y, ((class_config, feat_config), prep_config, style_config)).squeeze()
 
         prepped_y = (y + class_config) % n_classes
         prepped = np.concatenate([prepped[..., feat_config:], prepped[..., :feat_config]], axis=-1)
