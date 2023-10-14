@@ -1,10 +1,11 @@
 import math
+import os
+import requests
 import torch
 import numpy as np
 
-from tinygrad.tensor import Tensor
 
-import torch
+from tinygrad.tensor import Tensor
 
 class TinyMLP:
 
@@ -134,6 +135,14 @@ class TinyPFNTransformer:
     return sum([p.numel() for p in params])
 
 def load_ckpt_weights(tiny_model):
+
+  if not os.path.exists('model_ckpt/model.cpkt'):
+    os.makedirs('model_ckpt')
+    print("downloading weights to model_cpkt/model.cpkt")
+
+    response = requests.get('https://github.com/automl/TabPFN/raw/main/tabpfn/models_diff/prior_diff_real_checkpoint_n_0_epoch_42.cpkt', allow_redirects=True)
+    with open('model_ckpt/model.cpkt', 'wb') as f:
+      f.write(response.content)
 
   ckpt_params = torch.load('model_ckpt/model.cpkt', map_location=torch.device('cpu'))[0]
   for n, p in ckpt_params.items():
