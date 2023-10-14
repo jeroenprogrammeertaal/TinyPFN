@@ -2,7 +2,6 @@ import itertools
 import random
 import numpy as np
 import numpy.ma as ma
-import torch
 from sklearn.preprocessing import PowerTransformer
 
 def normalize(X: np.ndarray, train_idx) -> np.ndarray:
@@ -101,9 +100,3 @@ def get_cat_feats(data):
         if all_int:
             cats.append(i)
     return cats
-
-if __name__ == "__main__":
-    dummy_x = np.random.rand(24, 25)
-    dummy_y = np.random.randint(0, 9, (24, 1))
-
-    x, y, configs = prepare_inputs(dummy_x, dummy_y, 3)

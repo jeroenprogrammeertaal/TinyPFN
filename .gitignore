@@ -8,6 +8,10 @@ __pycache__/
 
 # datasets
 data/openml_datasets/
+data/numerai/
+
+# jupyter notebooks
+.ipynb
 
 # C extensions
 *.so
