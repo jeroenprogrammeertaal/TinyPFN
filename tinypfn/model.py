@@ -4,7 +4,6 @@ import numpy as np
 
 from tinygrad.tensor import Tensor
 
-from data.preprocess import prepare_inputs
 import torch
 
 class TinyMLP:
@@ -202,7 +201,7 @@ def load_ckpt_weights(tiny_model):
 if __name__ == "__main__":
   model = TinyPFNTransformer(100, 512, 1024, 12, 0.5)
   load_ckpt_weights(model)
-
+  """
   dummy_x = np.random.rand(24, 25)
   dummy_y = np.random.randint(0, 9, (24, 1))
 
@@ -213,3 +212,4 @@ if __name__ == "__main__":
   output = model.forward(x, y, 12)
   probs = model.get_class_probs(output, configs)
   print(probs.numpy())
+  """
